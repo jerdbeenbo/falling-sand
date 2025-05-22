@@ -1,3 +1,4 @@
+use std::thread;
 use macroquad::{miniquad::window::{set_window_size}, prelude::*};
 
 /*
@@ -20,6 +21,7 @@ use macroquad::{miniquad::window::{set_window_size}, prelude::*};
 
 */
 
+//TODO: Implement dirty-rectangle tracking
 
 ///Takes a grid size and returns a 2 dimensional array populated with 0s
 fn pop_2d_grid(cols: usize, rows: usize) -> Vec<Vec<i8>>{
@@ -110,7 +112,7 @@ async fn main() {
         
         //keep ownership scope of grid variable
         next_grid = eval_next(&grid, next_grid);
-
+        
         //grid equals next
         grid = next_grid;
 
