@@ -73,14 +73,14 @@ fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>>{
 #[macroquad::main("MyGame")]
 async fn main() {
 
+    //Set up left mouse button reading
+    let btn: MouseButton = MouseButton::Left;
+
     //Initialise the grid
     let w: usize = 10;
     let cols = screen_width() as usize / w;
     let rows = screen_height() as usize / w;
     let mut grid: Vec<Vec<i8>> = pop_2d_grid(cols, rows);
-
-    //debug sand
-    grid[10][10] = 1;
 
 
     loop {
@@ -91,8 +91,18 @@ async fn main() {
 
         //Create the next grid by checking current grid and reassigning 1s
         let mut next_grid: Vec<Vec<i8>> = pop_2d_grid(cols, rows);
+
+        //spawn sand on mouse position
+        if is_mouse_button_down(btn) {
+            let mp = mouse_position();
+            
+            let col = mp.1.floor() / w as f32;
+            let row = mp.0.floor() / w as f32;
+
+            grid[col as usize][row as usize] = 1;
+        }
         
-        //keep ownership scope
+        //keep ownership scope of grid variable
         next_grid = eval_next(&grid, next_grid);
 
         //grid equals next
