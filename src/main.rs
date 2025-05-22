@@ -1,4 +1,4 @@
-use macroquad::prelude::*;
+use macroquad::{miniquad::window::{set_window_position, set_window_size}, prelude::*};
 
 /*
 
@@ -47,8 +47,8 @@ fn d_grid(grid: &Vec<Vec<i8>>, w: f32) {
 fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>>{
 
     //Loop grid and retroactively assign next positions (only filling in 1s)
-    for row in 0..grid.len() {          //Don't -1 as we are looking ahead downwards
-        for col in 0..grid[row].len() - 1 {
+    for row in 0..grid.len() {
+        for col in 0..grid[row].len() {
             let state = grid[row][col];
             if state == 1 {                                             //Sand is present in cell
                 if row == grid.len() - 1 {                              //Am I in the bottom row?
@@ -73,13 +73,17 @@ fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>>{
 #[macroquad::main("MyGame")]
 async fn main() {
 
+    let width = 1200;
+    let height = 800;
+    set_window_size(width, height);
+
     //Set up left mouse button reading
     let btn: MouseButton = MouseButton::Left;
 
     //Initialise the grid
-    let w: usize = 10;
-    let cols = screen_width() as usize / w;
-    let rows = screen_height() as usize / w;
+    let w: usize = 5;
+    let cols = width as usize / w;
+    let rows = height as usize / w;
     let mut grid: Vec<Vec<i8>> = pop_2d_grid(cols, rows);
 
 
@@ -96,10 +100,10 @@ async fn main() {
         if is_mouse_button_down(btn) {
             let mp = mouse_position();
             
-            let col = mp.1.floor() / w as f32;
-            let row = mp.0.floor() / w as f32;
+            let row = (mp.1 / w as f32).floor();
+            let col = (mp.0 / w as f32).floor();
 
-            grid[col as usize][row as usize] = 1;
+            grid[row as usize][col as usize] = 1;
         }
         
         //keep ownership scope of grid variable
