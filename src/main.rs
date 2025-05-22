@@ -1,5 +1,5 @@
 use std::thread;
-use macroquad::{miniquad::window::{set_window_size}, prelude::*};
+use macroquad::{miniquad::window::set_window_size, prelude::*, rand::{gen_range}};
 
 /*
 
@@ -62,8 +62,38 @@ fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>>{
                     next[row + 1][col] = 1;
                 }
                 else if grid[row+1][col] == 1 {                         //Is there sand below me?
-                    //settle
-                    next[row][col] = 1;
+                    //sand is bellow
+
+                    //left or right entropy
+                    let mut left = true;
+                    let rand = gen_range(0, 2);
+                    if rand == 1 {
+                        left = false;
+                    }
+
+                    let belowL = grid[row + 1][col - 1];
+                    let belowR = grid[row + 1][col + 1];
+
+                    //check if both are free
+                    if belowL == 0 && belowR == 0 {
+                        //choose which way to fall
+                        if left {
+                            next[row+1][col-1] = 1;
+                        }
+                        else {
+                            next[row+1][col+1] = 1;
+                        }
+                    }
+                    else if belowL == 0 {
+                        next[row+1][col-1] = 1;
+                    }
+                    else if belowR == 0 {
+                        next[row+1][col+1] = 1;
+                    }
+                    else {
+                        //can't fall further, settle
+                        next[row][col] = 1;
+                    }
                 }
             }
         }
@@ -112,7 +142,7 @@ async fn main() {
         
         //keep ownership scope of grid variable
         next_grid = eval_next(&grid, next_grid);
-        
+
         //grid equals next
         grid = next_grid;
 
