@@ -1,4 +1,4 @@
-use macroquad::{miniquad::window::{set_window_position, set_window_size}, prelude::*};
+use macroquad::{miniquad::window::{set_window_size}, prelude::*};
 
 /*
 
@@ -31,11 +31,11 @@ fn pop_2d_grid(cols: usize, rows: usize) -> Vec<Vec<i8>>{
 }
 
 ///Function to draw a grid of appropraite size to the screen, takes current height and width as parameters
-fn d_grid(grid: &Vec<Vec<i8>>, w: f32) {
+fn d_grid(grid: &Vec<Vec<i8>>, w: f32, c: Color) {
 
     for row in 0..grid.len() {
         for col in 0..grid[row].len() {
-            let color: Color = if grid[row][col] == 0 {MAROON} else {YELLOW};
+            let color: Color = if grid[row][col] == 0 {c} else {YELLOW};
             draw_rectangle((col as f32) * w, (row as f32) * w, w, w, color);
         }
     }
@@ -55,7 +55,7 @@ fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>>{
                     //settle
                     next[row][col] = 1;
                 }
-                else if grid[row + 1][col] == 0 && col < grid.len() {   //Can I fall?
+                else if grid[row + 1][col] == 0 && col < grid[0].len() {   //Can I fall?
                     //fall
                     next[row + 1][col] = 1;
                 }
@@ -72,6 +72,8 @@ fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>>{
 
 #[macroquad::main("MyGame")]
 async fn main() {
+
+    let backgroundc: Color = Color::new(148.0, 146.0, 142.0, 0.0);
 
     let width = 1200;
     let height = 800;
@@ -91,7 +93,7 @@ async fn main() {
         
         //Draw grid and background
         clear_background(LIGHTGRAY);
-        d_grid(&grid, w as f32);
+        d_grid(&grid, w as f32, backgroundc);
 
         //Create the next grid by checking current grid and reassigning 1s
         let mut next_grid: Vec<Vec<i8>> = pop_2d_grid(cols, rows);
