@@ -1,6 +1,4 @@
-use std::cell;
-
-use macroquad::{miniquad::window::set_window_size, prelude::*};
+use macroquad::prelude::*;
 
 /*
 
