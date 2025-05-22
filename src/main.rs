@@ -5,7 +5,7 @@ use macroquad::{miniquad::window::set_window_size, prelude::*, rand::{gen_range}
 
     [0][0][0][0][0][0][0]
     [0][0][0][1][0][0][0]       <- 1 represents a sand
-    [0][0][0][0][0][0][0]
+    [0][0][0][0][2][0][0]       <- 2 represents water
     [0][0][0][0][0][0][0]
     [0][0][0][0][0][0][0]
     [0][0][0][0][0][0][0]
@@ -13,11 +13,15 @@ use macroquad::{miniquad::window::set_window_size, prelude::*, rand::{gen_range}
 
 
     CA (Cellular Automata rules):
+    SAND
         1. If a cell is a 1, and the cell below it is a zero:
             - Current cell becomes a 0.
             - Cell below beomces a 1.
         2. If a cell is a 1, and the cellow below is a 1:
             - We are resting, do nothing...
+
+    WATER
+        1. TODO...
 
 */
 
