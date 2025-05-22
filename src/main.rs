@@ -1,11 +1,11 @@
+use macroquad::{miniquad::window::set_window_size, prelude::*, rand::gen_range};
 use std::thread;
-use macroquad::{miniquad::window::set_window_size, prelude::*, rand::{gen_range}};
 
 /*
 
     [0][0][0][0][0][0][0]
     [0][0][0][1][0][0][0]       <- 1 represents a sand
-    [0][0][0][0][2][0][0]       <- 2 represents water
+    [0][0][0][0][2][0][0]       <- 2 represents water :TODO:
     [0][0][0][0][0][0][0]
     [0][0][0][0][0][0][0]
     [0][0][0][0][0][0][0]
@@ -28,8 +28,7 @@ use macroquad::{miniquad::window::set_window_size, prelude::*, rand::{gen_range}
 //TODO: Implement dirty-rectangle tracking
 
 ///Takes a grid size and returns a 2 dimensional array populated with 0s
-fn pop_2d_grid(cols: usize, rows: usize) -> Vec<Vec<i8>>{
-
+fn pop_2d_grid(cols: usize, rows: usize) -> Vec<Vec<i8>> {
     let mut grid: Vec<Vec<i8>> = vec![vec![0; cols]; rows];
 
     //Return the grid
@@ -38,65 +37,84 @@ fn pop_2d_grid(cols: usize, rows: usize) -> Vec<Vec<i8>>{
 
 ///Function to draw a grid of appropraite size to the screen, takes current height and width as parameters
 fn d_grid(grid: &Vec<Vec<i8>>, w: f32, c: Color) {
-
     for row in 0..grid.len() {
         for col in 0..grid[row].len() {
-            let color: Color = if grid[row][col] == 0 {c} else {YELLOW};
+            let color: Color = if grid[row][col] == 0 { c } else { YELLOW };
             draw_rectangle((col as f32) * w, (row as f32) * w, w, w, color);
         }
     }
-
 }
 
 ///Function that takes both grids (borrowed reference to the first) and evaluates
 /// what the next grid for the next frame should look like based on CA rules
-fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>>{
-
+fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>> {
     //Loop grid and retroactively assign next positions (only filling in 1s)
     for row in 0..grid.len() {
         for col in 0..grid[row].len() {
             let state = grid[row][col];
-            if state == 1 {                                             //Sand is present in cell
-                if row == grid.len() - 1 {                              //Am I in the bottom row?
+            if state == 1 {
+                //Sand is present in cell
+                if row == grid.len() - 1 {
+                    //Am I in the bottom row?
                     //settle
                     next[row][col] = 1;
-                }
-                else if grid[row + 1][col] == 0 && col < grid[0].len() {   //Can I fall?
+                } else if grid[row + 1][col] == 0 && col < grid[0].len() {
+                    //Can I fall?
                     //fall
                     next[row + 1][col] = 1;
-                }
-                else if grid[row+1][col] == 1 {                         //Is there sand below me?
+                } else if grid[row + 1][col] == 1 {
+                    //Is there sand below me?
                     //sand is bellow
 
-                    //left or right entropy
-                    let mut left = true;
-                    let rand = gen_range(0, 2);
-                    if rand == 1 {
-                        left = false;
-                    }
+                    //check if only 1, or both directions are free
+                    if col <= 0 {
+                        //we are on the left wall
 
-                    let belowL = grid[row + 1][col - 1];
-                    let belowR = grid[row + 1][col + 1];
+                        //see if we can fall right, otherwise stay in place
+                        if grid[row + 1][col + 1] == 0 {
+                            //fall right
+                            next[row + 1][col + 1] = 1;
+                        } else {
+                            next[row][col] = 1;
+                        }
+                    } else if col >= grid[row].len() - 1 {
+                        //we are on the right wall
 
-                    //check if both are free
-                    if belowL == 0 && belowR == 0 {
-                        //choose which way to fall
-                        if left {
-                            next[row+1][col-1] = 1;
+                        //see if we can fall left, otherwise stay in place
+                        if grid[row + 1][col - 1] == 0 {
+                            //fall right
+                            next[row + 1][col - 1] = 1;
+                        } else {
+                            next[row][col] = 1;
                         }
-                        else {
-                            next[row+1][col+1] = 1;
+                    } else {
+                        //we aren't on an edge
+                        //left or right entropy
+                        let mut left = true;
+                        let rand = gen_range(0, 2);
+                        if rand == 1 {
+                            left = false;
                         }
-                    }
-                    else if belowL == 0 {
-                        next[row+1][col-1] = 1;
-                    }
-                    else if belowR == 0 {
-                        next[row+1][col+1] = 1;
-                    }
-                    else {
-                        //can't fall further, settle
-                        next[row][col] = 1;
+
+                        let belowL = grid[row + 1][col - 1];
+                        let belowR = grid[row + 1][col + 1];
+
+                        //check if both are free
+                        if belowL == 0 && belowR == 0 {
+                            //choose which way to fall
+                            if left {
+                                next[row + 1][col - 1] = 1;
+                            } else {
+                                next[row + 1][col + 1] = 1;
+                            }
+                        } else if belowL == 0 {
+                            next[row + 1][col - 1] = 1;
+                        } else if belowR == 0 {
+                            next[row + 1][col + 1] = 1;
+                        } else {
+                            //can't fall further, settle
+                            next[row][col] = 1;
+                        }
                     }
                 }
             }
@@ -108,7 +126,6 @@ fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>>{
 
 #[macroquad::main("MyGame")]
 async fn main() {
-
     let backgroundc: Color = Color::new(148.0, 146.0, 142.0, 0.0);
 
     let width = 1200;
@@ -124,9 +141,7 @@ async fn main() {
     let rows = height as usize / w;
     let mut grid: Vec<Vec<i8>> = pop_2d_grid(cols, rows);
 
-
     loop {
-        
         //Draw grid and background
         clear_background(LIGHTGRAY);
         d_grid(&grid, w as f32, backgroundc);
@@ -137,13 +152,13 @@ async fn main() {
         //spawn sand on mouse position
         if is_mouse_button_down(btn) {
             let mp = mouse_position();
-            
+
             let row = (mp.1 / w as f32).floor();
             let col = (mp.0 / w as f32).floor();
 
             grid[row as usize][col as usize] = 1;
         }
-        
+
         //keep ownership scope of grid variable
         next_grid = eval_next(&grid, next_grid);
 
