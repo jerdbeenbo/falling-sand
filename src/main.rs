@@ -39,8 +39,10 @@ fn pop_2d_grid(cols: usize, rows: usize) -> Vec<Vec<i8>> {
 fn d_grid(grid: &Vec<Vec<i8>>, w: f32, c: Color) {
     for row in 0..grid.len() {
         for col in 0..grid[row].len() {
-            let color: Color = if grid[row][col] == 0 { c } else { YELLOW };
-            draw_rectangle((col as f32) * w, (row as f32) * w, w, w, color);
+            if grid[row][col] == 1 { //is sand
+                let color: Color = if grid[row][col] == 0 { c } else { YELLOW };
+                draw_rectangle((col as f32) * w, (row as f32) * w, w, w, color);            
+            }
         }
     }
 }
@@ -120,8 +122,8 @@ fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>> {
             }
         }
     }
-
-    next
+    
+    next            //return the vec to keep ownership
 }
 
 #[macroquad::main("MyGame")]
