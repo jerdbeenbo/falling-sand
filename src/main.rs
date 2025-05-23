@@ -27,6 +27,20 @@ use std::thread;
 
 //TODO: Implement dirty-rectangle tracking
 
+struct Chunk {
+    chunkID: usize,
+    active: bool,
+    frames_since_particles: usize,
+    neighbours_with_particles: Vec<usize>, //Vector of ChunkIDs to point to greater chunk
+    location: ((usize,usize),(usize,usize)) //Pair of coordinates to another set of coordinates -> from 0x0 to 32x32 for example
+}
+
+impl Chunk {
+    fn create_and_assign(location: ((usize,usize),(usize, usize)), chunk_id: usize, ) -> Self {
+
+        Chunk { chunkID: chunk_id, active: true, frames_since_particles: 0, neighbours_with_particles: Vec::new(), location: location }
+    }
+}
 
 struct ParticleGrid {
     grid: Vec<Vec<i8>>,
