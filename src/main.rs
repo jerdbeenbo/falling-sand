@@ -27,12 +27,39 @@ use std::thread;
 
 //TODO: Implement dirty-rectangle tracking
 
-///Takes a grid size and returns a 2 dimensional array populated with 0s
-fn pop_2d_grid(cols: usize, rows: usize) -> Vec<Vec<i8>> {
-    let mut grid: Vec<Vec<i8>> = vec![vec![0; cols]; rows];
 
-    //Return the grid
-    grid
+struct ParticleGrid {
+    grid: Vec<Vec<i8>>,
+    cols: usize,
+    rows: usize,
+    cell_size: usize,
+}
+
+impl ParticleGrid {
+
+    ///Creates a new grid with specified cols, rows and cell size
+    fn new_grid(cell_size: usize) -> Self {
+
+        let width = 1200;
+        let height = 800;
+
+
+        let _cell_size: usize = 4;
+        let _cols = width as usize / cell_size;
+        let _rows = height as usize / cell_size;
+
+        let _grid: Vec<Vec<i8>> = vec![vec![0; _cols]; _rows];
+
+
+        ParticleGrid {              //Return
+            grid: _grid,
+            cols: _cols,
+            rows: _rows,
+            cell_size: _cell_size,
+        }
+    }
+
+
 }
 
 ///Function to draw a grid of appropraite size to the screen, takes current height and width as parameters
@@ -49,22 +76,22 @@ fn d_grid(grid: &Vec<Vec<i8>>, w: f32, c: Color) {
 
 ///Function that takes both grids (borrowed reference to the first) and evaluates
 /// what the next grid for the next frame should look like based on CA rules
-fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>> {
+fn eval_next(grid: ParticleGrid, mut next: ParticleGrid) -> ParticleGrid {
     //Loop grid and retroactively assign next positions (only filling in 1s)
-    for row in 0..grid.len() {
-        for col in 0..grid[row].len() {
-            let state = grid[row][col];
+    for row in 0..grid.grid.len() {
+        for col in 0..grid.grid[row].len() {
+            let state = grid.grid[row][col];
             if state == 1 {
                 //Sand is present in cell
-                if row == grid.len() - 1 {
+                if row == grid.grid.len() - 1 {
                     //Am I in the bottom row?
                     //settle
-                    next[row][col] = 1;
-                } else if grid[row + 1][col] == 0 && col < grid[0].len() {
+                    next.grid[row][col] = 1;
+                } else if grid.grid[row + 1][col] == 0 && col < grid.grid[0].len() {
                     //Can I fall?
                     //fall
-                    next[row + 1][col] = 1;
-                } else if grid[row + 1][col] == 1 {
+                    next.grid[row + 1][col] = 1;
+                } else if grid.grid[row + 1][col] == 1 {
                     //Is there sand below me?
                     //sand is bellow
 
@@ -73,21 +100,21 @@ fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>> {
                         //we are on the left wall
 
                         //see if we can fall right, otherwise stay in place
-                        if grid[row + 1][col + 1] == 0 {
+                        if grid.grid[row + 1][col + 1] == 0 {
                             //fall right
-                            next[row + 1][col + 1] = 1;
+                            next.grid[row + 1][col + 1] = 1;
                         } else {
-                            next[row][col] = 1;
+                            next.grid[row][col] = 1;
                         }
-                    } else if col >= grid[row].len() - 1 {
+                    } else if col >= grid.grid[row].len() - 1 {
                         //we are on the right wall
 
                         //see if we can fall left, otherwise stay in place
-                        if grid[row + 1][col - 1] == 0 {
+                        if grid.grid[row + 1][col - 1] == 0 {
                             //fall right
-                            next[row + 1][col - 1] = 1;
+                            next.grid[row + 1][col - 1] = 1;
                         } else {
-                            next[row][col] = 1;
+                            next.grid[row][col] = 1;
                         }
                     } else {
                         //we aren't on an edge
@@ -98,24 +125,24 @@ fn eval_next(grid: &Vec<Vec<i8>>, mut next: Vec<Vec<i8>>) -> Vec<Vec<i8>> {
                             left = false;
                         }
 
-                        let belowL = grid[row + 1][col - 1];
-                        let belowR = grid[row + 1][col + 1];
+                        let belowL = grid.grid[row + 1][col - 1];
+                        let belowR = grid.grid[row + 1][col + 1];
 
                         //check if both are free
                         if belowL == 0 && belowR == 0 {
                             //choose which way to fall
                             if left {
-                                next[row + 1][col - 1] = 1;
+                                next.grid[row + 1][col - 1] = 1;
                             } else {
-                                next[row + 1][col + 1] = 1;
+                                next.grid[row + 1][col + 1] = 1;
                             }
                         } else if belowL == 0 {
-                            next[row + 1][col - 1] = 1;
+                            next.grid[row + 1][col - 1] = 1;
                         } else if belowR == 0 {
-                            next[row + 1][col + 1] = 1;
+                            next.grid[row + 1][col + 1] = 1;
                         } else {
                             //can't fall further, settle
-                            next[row][col] = 1;
+                            next.grid[row][col] = 1;
                         }
                     }
                 }
@@ -138,31 +165,28 @@ async fn main() {
     let btn: MouseButton = MouseButton::Left;
 
     //Initialise the grid
-    let w: usize = 5;
-    let cols = width as usize / w;
-    let rows = height as usize / w;
-    let mut grid: Vec<Vec<i8>> = pop_2d_grid(cols, rows);
+    let mut grid: ParticleGrid = ParticleGrid::new_grid(4);
 
     loop {
         //Draw grid and background
         clear_background(LIGHTGRAY);
-        d_grid(&grid, w as f32, backgroundc);
+        d_grid(&grid.grid, grid.cell_size as f32, backgroundc);
 
         //Create the next grid by checking current grid and reassigning 1s
-        let mut next_grid: Vec<Vec<i8>> = pop_2d_grid(cols, rows);
+        let mut next_grid: ParticleGrid = ParticleGrid::new_grid(4);
 
         //spawn sand on mouse position
         if is_mouse_button_down(btn) {
             let mp = mouse_position();
 
-            let row = (mp.1 / w as f32).floor();
-            let col = (mp.0 / w as f32).floor();
+            let row = (mp.1 / grid.cell_size as f32).floor();
+            let col = (mp.0 / grid.cell_size as f32).floor();
 
-            grid[row as usize][col as usize] = 1;
+            grid.grid[row as usize][col as usize] = 1;
         }
 
         //keep ownership scope of grid variable
-        next_grid = eval_next(&grid, next_grid);
+        next_grid = eval_next(grid, next_grid);
 
         //grid equals next
         grid = next_grid;
